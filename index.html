@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elementor Template JSON Importer</title>
+<script src="https://cdn.jsdelivr.net/npm/mammoth@1.6.0/mammoth.browser.min.js"></script>
+<style>
+:root{--bg:#f4f7f5;--card:#fff;--ink:#1d2b26;--mute:#62726b;--line:#dce5e0;--ac:#17785f;--acbg:#e3f3ed;--gray:#eef1ef;--warn:#9a5b00;--warnbg:#fff2dc;color-scheme:light}
+@media(prefers-color-scheme:dark){:root{--bg:#141a17;--card:#1d2521;--ink:#e8efeb;--mute:#9aa9a1;--line:#2f3a35;--ac:#5ccaa9;--acbg:#1b3a30;--gray:#28312d;--warn:#f0b35c;--warnbg:#3a2d14;color-scheme:dark}}
+*{box-sizing:border-box}html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,sans-serif}
+main{max-width:920px;margin:0 auto;padding:28px 18px 90px}
+h1{font:600 27px/1.2 Georgia,serif;margin:0 0 4px}
+.sub{color:var(--mute);margin:0 0 20px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.pill{padding:5px 12px;border-radius:20px;background:var(--gray);color:var(--mute);font-size:13px}
+.pill.on{background:var(--acbg);color:var(--ac);font-weight:600}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:16px}
+.card h2{margin:0 0 2px;font-size:17px}.card>p{margin:0 0 12px;color:var(--mute)}
+.drop{display:block;border:2px dashed var(--line);border-radius:10px;padding:22px;text-align:center;cursor:pointer;transition:.15s}
+.drop:hover,.drop.over{border-color:var(--ac);background:var(--acbg)}
+.drop.off{opacity:.45;pointer-events:none}.drop.ok{border-style:solid;border-color:var(--ac);background:var(--acbg)}
+.drop input{display:none}.drop b{color:var(--ac)}.drop small{display:block;color:var(--mute);margin-top:4px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--gray);border-radius:10px;padding:10px 12px}.stat b{display:block;font-size:22px}.stat span{color:var(--mute);font-size:13px}
+.stat.w{background:var(--warnbg)}.stat.w b{color:var(--warn)}
+.sec{border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden}
+.sec>summary{cursor:pointer;padding:11px 14px;font-weight:600;background:var(--gray);list-style:none}
+.sec>summary small{font-weight:400;color:var(--mute);margin-left:8px}
+.row{display:grid;grid-template-columns:170px 1fr 1.2fr;gap:12px;padding:11px 14px;border-top:1px solid var(--line);align-items:center}
+.lbl{font-size:13px;font-weight:600}.chip{display:inline-block;font-size:11px;font-weight:600;border-radius:10px;padding:1px 8px;margin-top:3px}
+.chip.m{background:var(--acbg);color:var(--ac)}.chip.b{background:var(--gray);color:var(--mute)}
+.was{color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+select,input[type=text]{width:100%;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px}
+.btn{background:var(--ac);color:var(--card);border:0;border-radius:9px;padding:11px 20px;font:inherit;font-weight:600;cursor:pointer}
+.btn.g{background:transparent;color:var(--ink);border:1px solid var(--line)}
+:focus-visible{outline:2px solid var(--ac);outline-offset:2px}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.bar label{display:flex;gap:6px;align-items:center;color:var(--mute)}
+.un{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:10px 14px;margin-bottom:12px;font-size:14px}
+.med summary{cursor:pointer}.med td{padding:3px 8px 3px 0;font-size:13px;word-break:break-all}
+#toast{margin-top:10px;color:var(--ac);font-weight:600}
+@media(max-width:820px){.pane{grid-template-columns:1fr}#docs{position:static;max-height:none}}
+@media(max-width:720px){.row{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr 1fr}}
+.pane{display:grid;grid-template-columns:1fr 1.25fr;gap:16px;align-items:start}
+#docs{position:sticky;top:10px;max-height:88vh;overflow:auto;padding-right:4px}
+.ph{font-weight:600;margin-bottom:8px;color:var(--mute);font-size:13px}.hint{color:var(--mute);font-size:13px;margin:0 0 8px}
+.pickbar{background:var(--acbg);border:1px solid var(--ac);border-radius:10px;padding:10px 12px;margin-bottom:10px;position:sticky;top:0;z-index:2}
+.pickbar .bar{margin:8px 0 4px}.pickbar .btn{padding:6px 12px;font-size:13px}
+.du{border:1px solid var(--line);border-left:4px solid var(--ac);border-radius:8px;padding:8px 10px;margin-bottom:8px;background:var(--card)}
+.du.free{border-left-color:var(--warn);background:var(--warnbg)}.du.go{cursor:pointer}.du.go:hover{outline:2px solid var(--ac)}
+.dh{font-weight:700;line-height:1.3}.dh.l1{font-size:19px}.dh.l2{font-size:17px}.dh.l3,.dh.l4{font-size:15px}
+.dt{font-size:13.5px}.dt p{margin:0 0 6px}.dt ul,.dt ol{margin:0 0 6px 18px;padding:0}
+.chip.w{background:var(--warnbg);color:var(--warn)}.du .chip{margin-top:6px}
+.ps{border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:12px;background:var(--card)}.pn{font-size:12px;color:var(--mute);margin-bottom:6px}
+.pv{position:relative;border:1px solid transparent;border-radius:6px;padding:5px 8px;margin:3px 0;cursor:pointer}
+.pv:hover{border-color:var(--ac)}.pv.sel{border-color:var(--ac);background:var(--acbg);box-shadow:0 0 0 2px var(--ac)}
+.pv.blank{border:1px dashed var(--line);min-height:30px;color:var(--mute);font-size:12px}.pv.blank:hover{border-color:var(--ac)}
+.pv small{display:block;font-size:11px;color:var(--mute)}
+.hd{font-weight:700;font-size:18px}.hd.h1{font-size:23px}.hd.h3,.hd.h4{font-size:16px}
+.tx,.an{font-size:14px}.tx p,.an p{margin:0 0 6px}
+.bt{display:inline-block;background:var(--ac);color:var(--card);border-radius:20px;padding:4px 14px;font-size:13px;font-weight:600}
+.q{font-weight:600;border-bottom:1px solid var(--line);padding-bottom:6px}.q:after{content:"＋";float:right;color:var(--mute)}
+.an{margin-left:12px;color:var(--mute)}.ib{background:var(--gray)}.li:before{content:"• "}
+#docs .du{display:block}.du.used{border-left-color:var(--c)}.du[draggable=true],.pv[draggable=true]{cursor:grab}
+.ps{border-left:4px solid var(--c)}.pn{color:var(--c);font-weight:600}
+.dtl{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.dtl b{margin-right:auto}.dtl .btn{padding:5px 10px;font-size:12px}
+.hl{outline:2px solid var(--ac)}.pv.over{background:var(--acbg);border-color:var(--ac);box-shadow:0 0 0 3px var(--ac)}
+body[data-dk=t] .pv[data-k=t],body[data-dk=h] .pv[data-k=h]{outline:2px dashed var(--ac);outline-offset:1px}
+body.dragging #docs.drophint{outline:2px dashed var(--warn)}
+@keyframes fl{from{background:var(--acbg)}to{background:transparent}}.flash{animation:fl 1.2s}
+.sub{cursor:grab;border-radius:4px;padding:1px 3px}.sub:hover{outline:1px solid var(--ac)}.sub.used{color:var(--ac)}.sub .chip{margin:0 0 0 6px}
+body[data-dl="1"] .pv[data-k=l]{outline:2px dashed var(--ac);outline-offset:1px}
+.hint{display:none;position:absolute;left:8px;top:calc(100% - 2px);z-index:6;max-width:92%;text-align:left;background:var(--ink);color:var(--card);border-radius:8px;padding:8px 10px;font:400 12px/1.4 "Segoe UI",system-ui,sans-serif;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+.pv:hover .hint{display:block}body.dragging .hint{display:none!important}.hint small{color:inherit;opacity:.7;font-size:11px}
+.hint button{display:block;margin-top:6px;background:var(--ac);color:var(--card);border:0;border-radius:6px;padding:3px 10px;font:inherit;font-weight:600;cursor:pointer}
+.sk{float:right;display:flex;gap:6px}.sk button{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:6px;padding:1px 8px;font:inherit;font-size:11px;cursor:pointer}.sk button:hover{border-color:var(--c);color:var(--c)}
+.hint{width:max-content;min-width:200px;max-width:min(340px,90vw)}
+.ed{display:none;position:absolute;top:2px;right:2px;background:var(--card);border:1px solid var(--line);border-radius:6px;color:var(--mute);padding:0 6px;font-size:12px;cursor:pointer;z-index:3}
+.pv:hover .ed{display:block}body.dragging .ed{display:none!important}
+.pv.edit{cursor:default;border-color:var(--ac);background:var(--acbg)}.pv.edit .btn{padding:4px 12px;font-size:12px}
+.ein{min-height:34px;padding:6px 8px;border:1px solid var(--ac);border-radius:6px;background:var(--card);color:var(--ink);outline:none;font-size:14px;font-weight:400}
+.vv{white-space:pre-line}.ein{white-space:pre-wrap}
+.cr{margin-left:12px;border-left:3px solid var(--line);border-radius:0 6px 6px 0}
+.med img{width:34px;height:34px;object-fit:cover;border-radius:4px;vertical-align:middle}.med select{width:auto;padding:3px;font-size:12px}
+.vv.rich{white-space:normal}.vv.rich p{margin:0 0 6px}.sk select{width:auto;padding:1px 4px;font-size:11px;border-radius:6px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+<h1>Elementor Template JSON Importer</h1>
+<p class="sub">Your Word document decides the order. The template just provides the layout.</p>
+<div class="steps"><span class="pill on" id="p1">1 Template</span><span class="pill" id="p2">2 Document</span><span class="pill" id="p3">3 Review</span><span class="pill" id="p4">4 Download</span></div>
+
+<section class="card"><h2>1. Add your Elementor template</h2><p>The .json file exported from Elementor.</p>
+<label class="drop" id="d1"><input type="file" id="tf" accept=".json,application/json"><b>Choose template</b> or drop it here<small id="ts">Nothing loaded yet</small></label></section>
+
+<section class="card"><h2>2. Add your content document</h2><p>A Word file using Heading 1/2/3. Text is inserted as plain text by default. Each section can keep its HTML formatting instead. Meta lines (META TITLE, META DESCRIPTION, SLUG) and [ADD …] placeholders are ignored.</p>
+<label class="drop off" id="d2"><input type="file" id="df" accept=".docx"><b>Choose document</b> or drop it here<small id="ds">Add the template first</small></label></section>
+
+<section class="card" id="rev" hidden><h2>3. Check the page</h2><p>Drag blocks from your document (left) onto the fields of the page (right). Each bullet in a list can be dragged on its own into an icon-list row, or drop a whole list on a row to fill the rows from there down. You can also drag between fields, or drag a field back to the left to unplace it. On touch screens: tap a field, then tap a block.</p>
+<div class="stats"><div class="stat"><b id="n1">0</b><span>Filled</span></div><div class="stat"><b id="n2">0</b><span>Left blank</span></div><div class="stat w"><b id="n3">0</b><span>Document blocks not placed</span></div></div>
+<div class="pane"><div id="docs"></div><div><div class="ph bar" style="justify-content:space-between"><span>Page preview <small style="font-weight:400">(hover any field to see its template text)</small></span><button class="btn g" id="phall" style="padding:4px 10px;font-size:12px">Use template text for all blank fields</button><select id="fmtall" style="width:auto;padding:3px;font-size:12px"><option value="">Format for all sections…</option><option value="raw">All plain text</option><option value="html">All keep HTML</option></select></div><div id="page"></div></div></div>
+<details class="med" id="media"></details></section>
+
+<section class="card" id="exp" hidden><h2>4. Download</h2><p>You get a new template to import back into Elementor.</p>
+<div class="bar"><input type="text" id="ttl" placeholder="New template title (optional)" style="max-width:340px"></div>
+<div class="bar"><select id="med" style="max-width:420px"><option value="keep">Images: visible in the editor (keep link + ID). Elementor may copy new images once</option><option value="rel">Relative path /wp-content/… + ID (experimental)</option><option value="id">Avoid re-import (ID only). Images may look blank in the editor</option><option value="none">Avoid re-import (remove all image links). You re-add images yourself</option></select></div>
+<div class="bar"><button class="btn" id="go">Download filled template</button><button class="btn g" onclick="location.reload()">Start over</button></div><div id="toast"></div></section>
+</main>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const txt=h=>{const d=document.createElement('div');d.innerHTML=h;return d.textContent.trim()};
+const snip=(s,n=60)=>{s=txt(s||'').replace(/\s+/g,' ');return s.length>n?s.slice(0,n)+'…':s||'(empty)'};
+const step=n=>[1,2,3,4].forEach(i=>$('#p'+i).classList.toggle('on',i<=n));
+
+// ---- Understand the template ----
+const FIELDS={'heading':[['title','t']],'text-editor':[['editor','h']],'button':[['text','t']],'animated-headline':[['highlighted_text','t']],
+ 'icon-box':[['title_text','t'],['description_text','h']],'image-box':[['title_text','t'],['description_text','h']],
+ 'testimonial':[['testimonial_content','h'],['testimonial_name','t'],['testimonial_job','t']],
+ 'call-to-action':[['title','t'],['description','h'],['button','t']],'counter':[['title','t']],'alert':[['alert_title','t'],['alert_description','h']]};
+const NAME={heading:'Heading','text-editor':'Text block',button:'Button','animated-headline':'Hero headline','icon-box':'Icon box','image-box':'Image box',testimonial:'Testimonial','call-to-action':'Call to action',counter:'Counter',alert:'Alert'};
+const SUB={title_text:'title',description_text:'text',testimonial_content:'quote',testimonial_name:'name',testimonial_job:'role',title:'title',description:'text',button:'button',alert_title:'title',alert_description:'text'};
+const REPEAT={accordion:['tabs','tab_title','tab_content'],toggle:['tabs','tab_title','tab_content'],tabs:['tabs','tab_title','tab_content'],'icon-list':['icon_list','text']};
+const NEST={'nested-accordion':['items','item_title'],'nested-tabs':['tabs','tab_title']};
+const LOCK=[]; // carousels are no longer skipped: their slides are read like any other section content
+const GENERIC=['title','heading','description','editor','content','text','title_text','description_text'];
+let tpl,tplName,slots=[],units=[],subs=[],pick=[],locked=0;
+
+function addSlot(sec,wt,obj,key,kind,label,o={}){
+ if(typeof obj[key]!=='string'||(!o.empty&&!obj[key].trim()))return;
+ slots.push({sec,wt,obj,key,kind,label,orig:obj[key],hs:obj.header_size||'',no:!!o.no,g:o.g,n:o.n});}
+function walk(els,sec){(els||[]).forEach((e,i)=>{const s=sec==null?i:sec;let kids=true;
+ if(e.elType==='widget'){const wt=e.widgetType,st=e.settings||{};
+  if(LOCK.includes(wt)){locked+=(JSON.stringify(e).match(/"widgetType"/g)||[]).length;kids=false}
+  else if(wt==='nested-carousel'){(e.elements||[]).forEach((c,n)=>{const b=slots.length;walk([c],s);slots.slice(b).forEach(x=>x.label='Slide '+(n+1)+' · '+x.label)});kids=false}
+  else if(wt==='testimonial-carousel'){(st.slides||[]).forEach((it,n)=>[['content','h'],['name','t'],['title','t']].forEach(([k,kd])=>addSlot(s,wt,it,k,kd,'Slide '+(n+1)+' · '+({content:'quote',name:'name',title:'role'}[k]))))}
+  else if(FIELDS[wt])FIELDS[wt].forEach(([k,kd])=>addSlot(s,wt,st,k,kd,(NAME[wt]||wt)+(FIELDS[wt].length>1?' · '+(SUB[k]||k):''),{empty:1,no:wt==='button'||(wt==='heading'&&!String(st[k]||'').trim())}));
+  else if(NEST[wt]){const [arr,tk]=NEST[wt],P=wt==='nested-tabs'?'Tab ':'FAQ ';(st[arr]||[]).forEach((it,n)=>{addSlot(s,wt,it,tk,'t',P+(n+1)+(P==='Tab '?' title':' question'),{empty:1});
+   const b=slots.length;walk([(e.elements||[])[n]].filter(Boolean),s);slots.slice(b).forEach(x=>x.label=P+(n+1)+(P==='Tab '?' content':' answer'))});kids=false}
+  else if(REPEAT[wt]){const [arr,tk,ck]=REPEAT[wt],L=st[arr]||[],P=wt==='tabs'?'Tab ':'FAQ ';L.forEach((it,n)=>{
+   addSlot(s,wt,it,tk,'t',wt==='icon-list'?'List item '+(n+1):P+(n+1)+(P==='Tab '?' title':' question'),{no:wt==='icon-list',g:wt==='icon-list'?L:undefined,n});
+   if(ck)addSlot(s,wt,it,ck,'h',P+(n+1)+(P==='Tab '?' content':' answer'))})}
+  else GENERIC.forEach(k=>addSlot(s,wt,st,k,/editor|content|description/.test(k)?'h':'t',wt+' · '+k));}
+ if(kids)walk(e.elements,s)})}
+
+// ---- Read the document (document order = master order) ----
+async function parseDocx(buf){
+ const r=await mammoth.convertToHtml({arrayBuffer:buf},{styleMap:["p[style-name='Title'] => h1:fresh"]});
+ const doc=new DOMParser().parseFromString(r.value,'text/html');
+ const imgs=doc.querySelectorAll('img').length;doc.querySelectorAll('img').forEach(i=>i.remove());
+ const SKIP=/^(meta\s*title|meta\s*description|slug)\s*:|^\[\s*add\b[^\]]*\]$/i;
+ const out=[];let cur=null,skipped=0;
+ [...doc.body.children].forEach(el=>{
+  if(SKIP.test(el.textContent.trim())){skipped++;return}
+  if(/^H[1-6]$/.test(el.tagName)){cur=null;out.push({k:'t',lvl:+el.tagName[1],text:el.textContent.trim(),html:el.innerHTML})}
+  else if(el.textContent.trim()){if(!cur){cur={k:'h',html:''};out.push(cur)}cur.html+=el.outerHTML}});
+ const subs=[]; // every list item becomes its own draggable piece, so each icon-list row can take one
+ out.forEach(u=>{if(u.k!=='h')return;const d=document.createElement('div');d.innerHTML=u.html;u.si=[];
+  d.querySelectorAll(':scope > ul > li, :scope > ol > li').forEach(li=>{u.si.push(subs.length);subs.push({k:'i',text:li.textContent.trim(),html:li.innerHTML})})});
+ return {units:out,subs,imgs,skipped};}
+
+// ---- Auto-match: the document's arrangement decides, the template only provides slots ----
+// Step 1: the document's sections (split at H1/H2) pick which template section they fill, in document order.
+// Step 2: inside each pair, blocks are placed in document order. Content never spills into another section.
+const W=t=>new Set(t.toLowerCase().match(/[a-z]{4,}/g)||[]);
+const jac=(x,y)=>{const A=W(x),B=W(y);if(!A.size||!B.size)return 0;let c=0;A.forEach(w=>B.has(w)&&c++);return c/(A.size+B.size-c)};
+function alignRange(S,U,skip,a){
+ const n=S.length,m=U.length,UG=4,D=Array.from({length:n+1},()=>new Float64Array(m+1));
+ const sc=(s,u)=>s.no||s.kind!==u.k||(skip&&skip.has(u))?-1e9:2+(s.hs&&u.lvl&&s.hs==='h'+u.lvl?.5:0);
+ for(let i=1;i<=n;i++)D[i][0]=-i;for(let j=1;j<=m;j++)D[0][j]=-UG*j;
+ for(let i=1;i<=n;i++)for(let j=1;j<=m;j++)D[i][j]=Math.max(D[i-1][j-1]+sc(slots[S[i-1]],units[U[j-1]]),D[i-1][j]-1,D[i][j-1]-UG);
+ let i=n,j=m;
+ while(i>0&&j>0){const v=sc(slots[S[i-1]],units[U[j-1]]);
+  if(v>0&&D[i][j]===D[i-1][j-1]+v){a[S[i-1]]=U[j-1];i--;j--}else if(D[i][j]===D[i-1][j]-1)i--;else j--}}
+function align(skip){
+ const a=slots.map(s=>s.wt==='button'?'keep':'clear');
+ const dg=[];units.forEach((u,j)=>{if((u.k==='t'&&u.lvl<=2)||!dg.length)dg.push({u:[]});dg[dg.length-1].u.push(j)});
+ const tg=[...new Set(slots.map(s=>s.sec))].map(sec=>({ix:slots.map((s,i)=>s.sec===sec?i:-1).filter(i=>i>=0)})).filter(t=>t.ix.some(i=>!slots[i].no));
+ const ss=dg.map(d=>tg.map(t=>{
+  const dh=units[d.u[0]].k==='t'?units[d.u[0]].text:'',th=slots.find((x,i)=>t.ix.includes(i)&&/heading|animated/.test(x.wt)&&x.orig.trim());
+  const dT=d.u.filter(j=>units[j].k==='t'),dB=d.u.length-dT.length,fs=t.ix.filter(i=>!slots[i].no),tT=fs.filter(i=>slots[i].kind==='t').length,tB=fs.length-tT;
+  const r=(x,y)=>Math.max(x,y)?Math.min(x,y)/Math.max(x,y):0;
+  const dFaq=dT.length>2&&dT.filter(j=>/\?$/.test(units[j].text)).length>dT.length/2,tFaq=t.ix.some(i=>/^FAQ/.test(slots[i].label));
+  return Math.max(.1,.3+jac(dh,th?txt(th.orig):'')*5+r(dT.length,tT)*1.5+r(dB,tB)+(dFaq===tFaq?(dFaq?3:0):-1.5))}));
+ const nD=dg.length,nT=tg.length,E=Array.from({length:nD+1},()=>new Float64Array(nT+1)),TG=-.5,DG=-2;
+ for(let i=1;i<=nD;i++)E[i][0]=DG*i;for(let j=1;j<=nT;j++)E[0][j]=TG*j;
+ for(let i=1;i<=nD;i++)for(let j=1;j<=nT;j++)E[i][j]=Math.max(E[i-1][j-1]+ss[i-1][j-1],E[i-1][j]+DG,E[i][j-1]+TG);
+ let i=nD,j=nT;
+ while(i>0&&j>0){if(E[i][j]===E[i-1][j-1]+ss[i-1][j-1]){alignRange(tg[j-1].ix,dg[i-1].u,skip,a);i--;j--}else if(E[i][j]===E[i-1][j]+DG)i--;else j--}
+ return a}
+
+// ---- Icon lists: fill from the list that follows their heading ----
+function splitList(c){const u=units[c],d=document.createElement('div');d.innerHTML=u.html;const parts=[],si=u.si.slice();let cur=null;
+ [...d.children].forEach(el=>{const L=/^(UL|OL)$/.test(el.tagName);if(!cur||cur.l!==L){cur={l:L,html:'',si:[]};parts.push(cur)}
+  cur.html+=el.outerHTML;if(L)cur.si=si.splice(0,el.querySelectorAll(':scope > li').length)});
+ const f=parts.findIndex(x=>x.l);if(f<0)return null;
+ units.splice(c,1,...parts.map(x=>({k:'h',html:x.html,si:x.si})));return units[c+f]}
+function autoMatch(){
+ let a=align();const groups=new Map(),claims=[];
+ slots.forEach((s,i)=>{if(s.g&&s.g.length>1){if(!groups.has(s.g))groups.set(s.g,[]);groups.get(s.g).push(i)}});
+ groups.forEach(ids=>{let hi=-1;for(let x=ids[0]-1;x>=0&&slots[x].sec===slots[ids[0]].sec;x--)if(slots[x].wt==='heading'&&typeof a[x]==='number'){hi=x;break}
+  if(hi<0)return;let c=-1;for(let j=a[hi]+1;j<units.length&&units[j].k!=='t';j++)if(units[j].si&&units[j].si.length){c=j;break}
+  if(c>=0&&!claims.some(z=>z.c===c))claims.push({c,ids})});
+ if(!claims.length)return a;
+ claims.sort((x,y)=>y.c-x.c).forEach(z=>z.u=splitList(z.c)); // list becomes its own block, intro text stays separate
+ a=align(new Set(claims.map(z=>z.u).filter(Boolean)));
+ claims.forEach(z=>{if(z.u)z.u.si.forEach((k,t)=>{if(z.ids[t]!=null)a[z.ids[t]]='s'+k})});
+ return a}
+
+// ---- Review screen: document on the left, page preview on the right (drag & drop) ----
+let sel=-1,flash=-1,drag=null,onlyFree=false,editing=-1,draft=null,edits={},secFmt={};
+const col=sec=>`hsl(${(sec*53+150)%360} 55% 45%)`;
+const fl=p=>typeof p==='number'||/^s\d+$/.test(p),getU=p=>typeof p==='number'?units[p]:subs[+p.slice(1)];
+// Everything inserted into the template is raw text: no tags. Paragraphs are separated by a blank line, list items by a line break.
+function raw(u){if(u.raw!=null)return u.raw;if(u.k!=='h')return u.raw=u.text||'';
+ const d=document.createElement('div');d.innerHTML=u.html;
+ return u.raw=[...d.children].map(el=>/^(UL|OL)$/.test(el.tagName)?[...el.querySelectorAll('li')].map(l=>l.textContent.trim()).filter(Boolean).join('\n'):el.textContent.trim()).filter(Boolean).join('\n\n')}
+const rich=s=>secFmt[s.sec]==='html'&&s.kind==='h'; // per-section choice: plain text (default) or keep HTML formatting in body fields
+const htmlOf=u=>u.k==='t'?`<h${u.lvl}>${u.html}</h${u.lvl}>`:u.k==='i'?`<p>${u.html}</p>`:u.html;
+function val(i){const p=pick[i],s=slots[i];
+ if(p==='edit')return esc(edits[i]||'');
+ if(fl(p)){const u=getU(p);return rich(s)?htmlOf(u):esc(raw(u))}
+ return p==='keep'?(s.kind==='t'?esc(txt(s.orig)):s.orig):''}
+function cls(s){const L=s.label;
+ if(s.wt==='heading'||s.wt==='animated-headline')return 'hd '+s.hs;if(s.wt==='button')return 'bt';
+ if(/^(FAQ|Tab) \d+ (question|title)/.test(L))return 'q';if(/^(FAQ|Tab) \d+ (answer|content)/.test(L))return 'an';
+ if(/^List item/.test(L))return 'li';if(/^(Icon|Image) box/.test(L))return 'ib';return 'tx'}
+function render(){
+ if(editing>=0){const el=document.querySelector('.ein');if(el)draft=el.innerHTML}
+ const ds=$('#docs').scrollTop,used=new Map(),usedS=new Map();
+ pick.forEach((p,i)=>{if(typeof p==='number')used.set(p,i);else if(/^s\d+$/.test(p))usedS.set(+p.slice(1),i)});
+ const bu=j=>used.has(j)||(units[j].si||[]).some(k=>usedS.has(k));
+ const nf=pick.filter(p=>fl(p)||p==='edit').length;$('#n1').textContent=nf;$('#n2').textContent=pick.length-nf;$('#n3').textContent=units.filter((u,j)=>!bu(j)).length;
+ const by=new Map();slots.forEach((s,i)=>{if(!by.has(s.sec))by.set(s.sec,[]);by.get(s.sec).push(i)});
+ $('#page').innerHTML=[...by].map(([sec,ids])=>`<div class="ps" style="--c:${col(sec)}"><div class="pn">Section ${sec+1}<span class="sk"><select data-sf="${sec}" title="How content is inserted in this section"><option value="raw"${secFmt[sec]!=='html'?' selected':''}>Plain text</option><option value="html"${secFmt[sec]==='html'?' selected':''}>Keep formatting (HTML)</option></select><button data-sk="${sec}" title="Keep every template text in this section">Use template text for this section</button><button data-sd="${sec}" title="Fill this section from the document again">Use document content</button></span></div>`+ids.map(i=>{const s=slots[i],v=val(i);
+  if(editing===i)return `<div class="pv edit" data-i="${i}"><small>Editing: ${esc(s.label)}</small><div class="ein" contenteditable="true" data-e="${i}">${draft!=null?draft:v}</div><div class="bar" style="margin:6px 0 0"><button class="btn" data-esave="${i}">Save</button><button class="btn g" data-ecancel="1">Cancel</button><small>${s.kind==='t'?'Enter saves':'Ctrl+Enter saves'} · Esc cancels</small></div></div>`;
+  return `<div class="pv ${v?cls(s):'blank'}${/^Slide \d/.test(s.label)?' cr':''}${sel===i?' sel':''}${flash===i?' flash':''}" data-i="${i}" data-k="${s.g?'l':s.kind}" draggable="${fl(pick[i])}" title="${esc(s.label)}"><span class="vv${rich(s)&&fl(pick[i])?' rich':''}">${v||esc(s.label)+' (blank)'}</span>${s.orig.trim()?`<span class="hint"><small>Template placeholder · ${esc(s.label)}</small>${esc(snip(s.orig,150))}<button data-keep="${i}">${pick[i]==='keep'?'Stop using placeholder':fl(pick[i])?'Use placeholder instead of document text':'Use this placeholder'}</button></span>`:''}<button class="ed" data-edit="${i}" title="Edit this field">✎</button></div>`}).join('')+'</div>').join('');
+ const body=u=>{if(!u.si||!u.si.length)return u.html;const d=document.createElement('div');d.innerHTML=u.html;
+  d.querySelectorAll(':scope > ul > li, :scope > ol > li').forEach((li,n)=>{const k=u.si[n];if(k==null)return;li.dataset.s=k;li.draggable=true;li.className='sub'+(usedS.has(k)?' used':'');
+   if(usedS.has(k)){const t=usedS.get(k);li.insertAdjacentHTML('beforeend',`<span class="chip m">→ Section ${slots[t].sec+1} · ${esc(slots[t].label)}</span>`)}});return d.innerHTML};
+ $('#docs').innerHTML=`<div class="dtl"><b>Your document</b><button class="btn g" data-act="free">${onlyFree?'Show all':'Not placed only'}</button><button class="btn g" data-act="reset">Re-run auto-match</button></div>`+
+  (sel>=0?`<div class="pickbar"><b>Filling:</b> ${esc(slots[sel].label)}<br><small>Click a document block${slots[sel].g?' or a single bullet':''} below, or:</small><div class="bar"><button class="btn g" data-act="clear">Leave blank</button><button class="btn g" data-act="keep">Keep template text</button><button class="btn g" data-act="cancel">Cancel</button></div></div>`:'')+
+  units.map((u,j)=>{const t=used.get(j),b=bu(j);if(onlyFree&&b)return'';
+   return `<div class="du ${b?'used':'free'}${sel>=0?' go':''}" data-u="${j}" draggable="true" style="--c:${t!=null?col(slots[t].sec):b?'var(--ac)':'transparent'}">${u.k==='t'?`<div class="dh l${u.lvl}">${esc(u.text)}</div>`:`<div class="dt">${body(u)}</div>`}<span class="chip ${b?'m':'w'}">${t!=null?'→ Section '+(slots[t].sec+1)+' · '+esc(slots[t].label):b?'List items placed':'Not placed. Drag it onto a field'}</span></div>`}).join('');
+ $('#docs').scrollTop=ds}
+function put(i,j){pick.forEach((p,k)=>{if(p===j&&k!==i)pick[k]='clear'});pick[i]=j;flash=i;sel=-1;render()}
+function putS(i,k){pick.forEach((p,x)=>{if(p==='s'+k&&x!==i)pick[x]='clear'});pick[i]='s'+k;flash=i;sel=-1;render()}
+function fillList(i,si){const s0=slots[i];si.forEach((k,t)=>{const x=slots.findIndex(z=>z.g===s0.g&&z.n===s0.n+t);if(x<0)return;
+ pick.forEach((p,y)=>{if(p==='s'+k&&y!==x)pick[y]='clear'});pick[x]='s'+k});flash=i;sel=-1;render()}
+function drop(i,u){const sl=slots[i];if(sl.g&&u.si&&u.si.length)fillList(i,u.si);else put(i,units.indexOf(u))}
+$('#page').addEventListener('click',e=>{const sv=e.target.closest('[data-esave]');if(sv)return saveEdit(+sv.dataset.esave);
+ if(e.target.closest('[data-ecancel]')){editing=-1;draft=null;return render()}
+ if(e.target.closest('.pv.edit'))return;
+ const eb=e.target.closest('[data-edit]');if(eb)return startEdit(+eb.dataset.edit);
+ const sk=e.target.closest('[data-sk]'),sd=e.target.closest('[data-sd]');
+ if(sk){slots.forEach((x,i)=>{if(x.sec===+sk.dataset.sk&&x.orig.trim())pick[i]='keep'});return render()}
+ if(sd){const a=autoMatch();slots.forEach((x,i)=>{if(x.sec===+sd.dataset.sd)pick[i]=a[i]});return render()}
+ const k=e.target.closest('[data-keep]');
+ if(k){const i=+k.dataset.keep;pick[i]=pick[i]==='keep'?'clear':'keep';flash=i;return render()}
+ const el=e.target.closest('[data-i]');if(el){sel=+el.dataset.i;render()}});
+function startEdit(i){editing=i;sel=-1;draft=null;render();const el=document.querySelector('.ein');
+ if(el){el.focus();const r=document.createRange();r.selectNodeContents(el);r.collapse(false);const g=getSelection();g.removeAllRanges();g.addRange(r)}}
+function saveEdit(i){const el=document.querySelector('.ein');if(!el)return;
+ const v=slots[i].kind==='t'?el.textContent.trim():el.innerText.replace(/\n{3,}/g,'\n\n').trim();
+ if(txt(v)){pick[i]='edit';edits[i]=v}else pick[i]='clear';editing=-1;draft=null;flash=i;render()}
+$('#page').addEventListener('dblclick',e=>{const el=e.target.closest('[data-i]');if(el&&!el.classList.contains('edit'))startEdit(+el.dataset.i)});
+$('#page').addEventListener('keydown',e=>{const el=e.target.closest('.ein');if(!el)return;const i=+el.dataset.e;
+ if(e.key==='Escape'){editing=-1;draft=null;render()}
+ else if(e.key==='Enter'&&(slots[i].kind==='t'?!e.shiftKey:(e.ctrlKey||e.metaKey))){e.preventDefault();saveEdit(i)}});
+$('#page').addEventListener('paste',e=>{if(e.target.closest('.ein')){e.preventDefault();document.execCommand('insertText',false,e.clipboardData.getData('text/plain'))}});
+$('#page').addEventListener('change',e=>{const sf=e.target.dataset.sf;if(sf!=null){secFmt[+sf]=e.target.value;render()}});
+$('#fmtall').onchange=e=>{if(e.target.value){slots.forEach(x=>secFmt[x.sec]=e.target.value);render()}e.target.value=''};
+$('#phall').onclick=()=>{slots.forEach((s,i)=>{if(s.orig.trim()&&pick[i]==='clear')pick[i]='keep'});render()};
+$('#docs').addEventListener('click',e=>{
+ const b=e.target.closest('[data-act]');
+ if(b){const a=b.dataset.act;if(a==='free'){onlyFree=!onlyFree;return render()}
+  if(a==='reset'){pick=autoMatch();sel=-1;return render()}
+  if(a==='clear'||a==='keep')pick[sel]=a;sel=-1;return render()}
+ const li=e.target.closest('[data-s]');
+ if(li){const k=+li.dataset.s;if(sel>=0)return putS(sel,k);const t=pick.indexOf('s'+k);if(t>=0)document.querySelector(`#page [data-i="${t}"]`)?.scrollIntoView({block:'center',behavior:'smooth'});return}
+ const d=e.target.closest('[data-u]');if(!d)return;const j=+d.dataset.u;
+ if(sel>=0)drop(sel,units[j]);
+ else{const t=pick.indexOf(j);if(t>=0)document.querySelector(`#page [data-i="${t}"]`)?.scrollIntoView({block:'center',behavior:'smooth'})}});
+// drag & drop: block or single bullet -> field, field -> field (swap), field -> document pane (unplace)
+document.addEventListener('dragstart',e=>{const li=e.target.closest?.('#docs [data-s]'),u=e.target.closest?.('#docs [data-u]'),f=e.target.closest?.('#page [data-i]');
+ if(li)drag={s:+li.dataset.s,k:'i',l:1};
+ else if(u){const j=+u.dataset.u;drag={u:j,k:units[j].k,l:units[j].si&&units[j].si.length?1:0}}
+ else if(f&&fl(pick[+f.dataset.i])){const i=+f.dataset.i;drag={f:i,k:slots[i].kind,l:slots[i].g?1:0}}else return;
+ e.dataTransfer.setData('text/plain','x');e.dataTransfer.effectAllowed='move';document.body.dataset.dk=drag.k==='i'?'x':drag.k;document.body.dataset.dl=drag.l?'1':'0';
+ document.body.classList.add('dragging');$('#docs').classList.toggle('drophint',drag.f!=null)});
+document.addEventListener('dragend',()=>{drag=null;delete document.body.dataset.dk;delete document.body.dataset.dl;document.body.classList.remove('dragging');$('#docs').classList.remove('drophint');document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'))});
+$('#page').addEventListener('dragover',e=>{const f=e.target.closest('[data-i]');if(!f||!drag)return;e.preventDefault();
+ document.querySelectorAll('.pv.over').forEach(x=>x!==f&&x.classList.remove('over'));f.classList.add('over')});
+$('#page').addEventListener('drop',e=>{const f=e.target.closest('[data-i]');if(!f||!drag)return;e.preventDefault();const i=+f.dataset.i;
+ if(drag.s!=null)putS(i,drag.s);else if(drag.u!=null)drop(i,units[drag.u]);
+ else if(drag.f!==i){[pick[drag.f],pick[i]]=[pick[i],pick[drag.f]];flash=i;render()}});
+$('#docs').addEventListener('dragover',e=>{if(drag&&drag.f!=null)e.preventDefault()});
+$('#docs').addEventListener('drop',e=>{if(drag&&drag.f!=null){e.preventDefault();pick[drag.f]='clear';flash=-1;render()}});
+// hovering one side highlights its partner on the other side
+function hover(e,on){const f=e.target.closest?.('#page [data-i]'),li=e.target.closest?.('#docs [data-s]'),u=e.target.closest?.('#docs [data-u]');let o=null;
+ const pk=f?pick[+f.dataset.i]:null;
+ if(f&&fl(pk))o=document.querySelector(typeof pk==='number'?`#docs [data-u="${pk}"]`:`#docs [data-s="${pk.slice(1)}"]`);
+ else if(li){const t=pick.indexOf('s'+li.dataset.s);if(t>=0)o=document.querySelector(`#page [data-i="${t}"]`)}
+ else if(u){const t=pick.indexOf(+u.dataset.u);if(t>=0)o=document.querySelector(`#page [data-i="${t}"]`)}
+ if(o)o.classList.toggle('hl',on)}
+document.addEventListener('mouseover',e=>hover(e,true));document.addEventListener('mouseout',e=>hover(e,false));
+
+let mrefs=[];
+function collect(root){const f=[];(function w(o,k){if(Array.isArray(o))return o.forEach(x=>w(x,k));if(!o||typeof o!=='object')return;
+ if(typeof o.url==='string'&&'id' in o&&o.url)f.push({o,k});Object.entries(o).forEach(([kk,v])=>w(v,typeof v==='object'&&!Array.isArray(v)?kk:k))})(root,'');return f}
+function renderMedia(){mrefs=collect(tpl).map(x=>({k:x.k,url:x.o.url,id:x.o.id,mode:'default'}));drawMedia()}
+const MOPT=[['default','Export default'],['keep','Keep link + ID (visible)'],['rel','Relative path /wp-content/… + ID'],['id','ID only (no re-import)'],['none','Remove link']];
+function drawMedia(){
+ $('#media').innerHTML=`<summary><b>Media report:</b> ${mrefs.length} image/icon references, ${new Set(mrefs.map(x=>x.url)).size} unique files. Choose how each is exported.</summary>`+
+ (mrefs.length?`<div class="bar" style="margin:8px 0"><span style="color:var(--mute)">Set all:</span>${MOPT.map(([v,l])=>`<button class="btn g" data-ma="${v}" style="padding:3px 10px;font-size:12px">${l}</button>`).join('')}</div><table>`+
+  mrefs.map((x,n)=>`<tr><td><img src="${esc(x.url)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'"></td><td>${esc(x.k)}</td><td>id ${esc(x.id||'—')}</td><td><a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.url.split('/').pop())}</a></td>
+   <td><select data-mn="${n}">${MOPT.map(([v,l])=>`<option value="${v}"${x.mode===v?' selected':''}>${l}</option>`).join('')}</select></td></tr>`).join('')+'</table>':'<p>No media found.</p>')}
+$('#media').addEventListener('change',e=>{const n=e.target.dataset.mn;if(n!=null)mrefs[+n].mode=e.target.value});
+$('#media').addEventListener('click',e=>{const b=e.target.closest('[data-ma]');if(b){mrefs.forEach(x=>x.mode=b.dataset.ma);drawMedia()}});
+function stripMedia(o,m){if(Array.isArray(o))return o.forEach(x=>stripMedia(x,m));if(!o||typeof o!=='object')return;
+ if(typeof o.url==='string'&&'id' in o){if(m==='none'){o.url='';o.id=''}else if(m==='id')o.url='';else o.id=''}Object.values(o).forEach(v=>stripMedia(v,m))}
+
+// ---- Files (click or drag & drop) ----
+function wire(zone,input,fn){input.onchange=()=>input.files[0]&&fn(input.files[0]);
+ ['dragover','dragenter'].forEach(t=>zone.addEventListener(t,e=>{e.preventDefault();zone.classList.add('over')}));
+ ['dragleave','drop'].forEach(t=>zone.addEventListener(t,()=>zone.classList.remove('over')));
+ zone.addEventListener('drop',e=>{e.preventDefault();e.dataTransfer.files[0]&&fn(e.dataTransfer.files[0])})}
+wire($('#d1'),$('#tf'),async f=>{try{tpl=JSON.parse(await f.text());tplName=f.name.replace(/\.json$/i,'');
+ const els=Array.isArray(tpl)?tpl:tpl.content;if(!Array.isArray(els))throw Error('no "content" found. Is this an Elementor export?');
+ slots=[];locked=0;walk(els);$('#d1').classList.add('ok');
+ $('#ts').textContent=`${f.name}: ${slots.length} editable fields in ${new Set(slots.map(s=>s.sec)).size} sections`+(locked?` · ${locked} carousel widgets left untouched`:'');
+ $('#d2').classList.remove('off');$('#ds').textContent='Drop your .docx here';$('#rev').hidden=$('#exp').hidden=true;step(2);
+ }catch(err){$('#ts').textContent='Could not read template: '+err.message}});
+wire($('#d2'),$('#df'),async f=>{try{const r=await parseDocx(await f.arrayBuffer());units=r.units;subs=r.subs;edits={};secFmt={};editing=-1;draft=null;pick=autoMatch();
+ $('#d2').classList.add('ok');$('#ds').textContent=`${f.name}: ${units.length} content blocks`+(r.skipped?` · ${r.skipped} meta/placeholder lines ignored`:'')+(r.imgs?` · ${r.imgs} images skipped`:'');
+ $('#rev').hidden=$('#exp').hidden=false;render();renderMedia();step(4);
+ }catch(err){$('#ds').textContent='Could not read document: '+err.message}});
+
+// ---- Export ----
+$('#go').onclick=()=>{
+ const saved=slots.map(s=>s.obj[s.key]);
+ slots.forEach((s,i)=>{const p=pick[i];if(p==='clear')s.obj[s.key]='';
+  else if(p==='edit')s.obj[s.key]=edits[i]||'';
+  else if(fl(p)){const u=getU(p);
+   s.obj[s.key]=rich(s)?htmlOf(u):raw(u)}});
+ if(!Array.isArray(tpl)&&$('#ttl').value.trim())tpl.title=$('#ttl').value.trim();
+ const out=JSON.parse(JSON.stringify(tpl));slots.forEach((s,i)=>s.obj[s.key]=saved[i]);
+ const dm=$('#med').value;
+ collect(out).forEach((x,n)=>{const m=mrefs[n]&&mrefs[n].mode!=='default'?mrefs[n].mode:dm;if(m==='rel'){try{x.o.url=new URL(x.o.url).pathname}catch(err){}}else if(m!=='keep')x.o.url='';if(m==='none')x.o.id=''});
+ const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([JSON.stringify(out,null,2)],{type:'application/json'})),download:tplName+'-filled.json'});
+ a.click();URL.revokeObjectURL(a.href);$('#toast').textContent='Downloaded '+a.download+'. Import it in Elementor.'};
+</script>
+</body>
+</html>
